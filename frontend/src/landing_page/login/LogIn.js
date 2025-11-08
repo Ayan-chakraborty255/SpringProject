@@ -11,21 +11,20 @@ const LogIn = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:8080/api/user/login", {
-        email,
-        password,
-      });
-
-      const token = res.data.token;
-      localStorage.setItem("authToken", token);
+      const res = await axios.post(
+        "http://localhost:8080/api/user/login",
+        { email, password },
+        { withCredentials: true }
+      );
 
       alert("✅ Login successful!");
 
-      // ✅ Redirect to Dashboard (port 8081) with token
-      window.location.href = `http://localhost:8081/?token=${token}`;
-
+      // Redirect without token in URL
+      window.location.href = "http://localhost:8081/";
     } catch (err) {
-      alert("❌ " + (err.response?.data?.message || "Invalid Email or Password"));
+      alert(
+        "❌ " + (err.response?.data?.message || "Invalid Email or Password")
+      );
     }
   };
 

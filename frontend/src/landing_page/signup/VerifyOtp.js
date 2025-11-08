@@ -9,7 +9,13 @@ const VerifyOtp = ({ email, sessionId }) => {
 
     try {
       const res = await axios.post(
-        `http://localhost:8080/api/user/verify?email=${email}&sessionId=${sessionId}&otp=${otp}`
+        "http://localhost:8080/api/user/verify",
+        {
+          email,
+          sessionId,
+          otp: Number(otp),
+        },
+        { withCredentials: true } // ✅ REQUIRED NOW
       );
 
       alert("✅ " + res.data);

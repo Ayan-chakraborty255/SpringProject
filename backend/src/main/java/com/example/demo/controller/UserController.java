@@ -1,15 +1,21 @@
 package com.example.demo.controller;
  
-import com.example.demo.model.User;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.service.OtpService;
-import com.example.demo.service.JwtService;
-
-import lombok.RequiredArgsConstructor;
-
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.JwtService;
+import com.example.demo.service.OtpService;
+
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @RestController
@@ -24,7 +30,7 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> sendSignUpOTP(@RequestBody SignupRequest request) {
 
-        String email = request.email();
+        String email = request.email().toLowerCase();
         String username = request.username();
         String rawPassword = request.password();
 
@@ -82,10 +88,11 @@ public class UserController {
 
     // ---------------------- VERIFY OTP ----------------------
     @PostMapping("/verify")
-    public ResponseEntity<String> verifySignupOtp(
-            @RequestParam String email,
-            @RequestParam String sessionId,
-            @RequestParam int otp) {
+    public ResponseEntity<String> verifySignupOtp(@RequestBody VerifyRequest req) {
+
+        String email = req.email().toLowerCase();
+        String sessionId = req.sessionId();
+        int otp = req.otp();
 
         User user = repo.findByEmail(email);
         if (user == null) return ResponseEntity.status(404).body("User not found");
@@ -107,7 +114,7 @@ public class UserController {
         return ResponseEntity.ok("Signup successful! You can now login.");
     }
 
-
+    public record VerifyRequest(String email, String sessionId, int otp) {}
     // ---------------------- LOGIN ----------------------
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -121,11 +128,59 @@ public class UserController {
         if (!BCrypt.checkpw(request.password(), user.getPassword()))
             return ResponseEntity.status(401).body(new LoginResponse(null, "Incorrect password"));
 
-        // ✅ Generate JWT Token
+        // ✅ Generate JWT token
         String token = jwtService.generateToken(user.getEmail());
 
-        return ResponseEntity.ok(new LoginResponse(token, "Login success"));
+        // ✅ Store token in secure HTTP-only cookie
+        ResponseCookie cookie = ResponseCookie.from("authToken", token)
+                .httpOnly(true)
+                .secure(false) 
+                .path("/")    // ✅ Allow all paths
+                .sameSite("Lax") // ✅ Allow sending cookie across ports
+                .build();
+
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new LoginResponse(null, "Login success"));
     }
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@CookieValue(name = "authToken", required = false) String token) {
+        if (token == null) {
+            return ResponseEntity.status(401).body("Not logged in");
+        }
+
+        try {
+            String email = jwtService.extractEmail(token);
+            return ResponseEntity.ok(email);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        }
+        
+        
+    } 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        ResponseCookie cookie = ResponseCookie.from("authToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)  // ✅ delete cookie
+                .sameSite("Strict")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Logged out");
+    }
+
+
+
+   
+
+
+
 
 
     // ---------------------- DTOs --------------------------------

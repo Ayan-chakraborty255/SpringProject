@@ -6,7 +6,9 @@ import React, { useEffect, useState } from "react";
 const Positions = () => {
   const[allPositions,setAllPositions]=useState([]);
   useEffect(()=>{
-    axios.get("http://localhost:8080/api/positions/allPositions").then((res)=>{
+    axios.get("http://localhost:8080/api/positions/allPositions", {
+        withCredentials: true,
+      }).then((res)=>{
       setAllPositions(res.data);
     })
   },[])

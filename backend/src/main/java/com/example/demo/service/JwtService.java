@@ -24,7 +24,9 @@ public class JwtService {
                 .compact();
     }
     public String extractEmail(String token) {
-        return Jwts.parser().setSigningKey(SECRET)
+        return Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes()))
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();

@@ -1,15 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("authToken");
+  const [checked, setChecked] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      // different origin → use full redirect
-      window.location.replace("http://localhost:8082/login");
-    }
-  }, [token]);
+    axios.get("http://localhost:8080/api/user/me", { withCredentials: true })
+      .then(() => setAuthorized(true))
+      .catch(() => {
+        // ✅ If not logged in → go back to Login App
+        window.location.href = "http://localhost:8082/login";
+      })
+      .finally(() => setChecked(true));
+  }, []);
 
-  if (!token) return null; // 
+  if (!checked) return null;  // Wait until backend check completes
+  if (!authorized) return null; // Prevent flickering
+
   return children;
 }

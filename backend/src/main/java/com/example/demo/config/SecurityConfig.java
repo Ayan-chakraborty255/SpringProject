@@ -18,35 +18,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> {}) // ✅ Enable CORS
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> {}) // ✅ Enable CORS configuration from CorsConfig
 
-                .authorizeHttpRequests(auth -> auth
-
-                        // ✅ PUBLIC APIs (Signup, Login, Verify OTP)
-                        .requestMatchers(
-                                "/api/user/signup",
-                                "/api/user/login",
-                                "/api/user/verify"
-                        ).permitAll()
-
-                        // ✅ Public pages from Landing frontend
-                        .requestMatchers(
-                                "/login", "/signup", "/about", "/products", "/pricing", "/support"
-                        ).permitAll()
-
-                        // ✅ Protected routes (Dashboard)
-                        .requestMatchers(
-                                "/api/user/profile",
-                                "/api/secure/**",
-                                "/dashboard/**"
-                        ).authenticated()
-
-                        .anyRequest().permitAll()
-                )
-
-                // ✅ Add JWT auth filter
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/user/signup", "/api/user/login", "/api/user/verify", "/api/user/me")
+                .permitAll()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

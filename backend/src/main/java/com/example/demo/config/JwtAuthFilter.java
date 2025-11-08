@@ -1,30 +1,32 @@
 package com.example.demo.config;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.demo.util.JwtUtil;
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.JwtService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
-        this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
+    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -32,41 +34,43 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getServletPath();
+        String token = null;
 
-        // ✅ Allow public APIs without JWT
-        if (path.startsWith("/api/user/signup") ||
-            path.startsWith("/api/user/login") ||
-            path.startsWith("/api/user/verify")) {
-
-            filterChain.doFilter(request, response);
-            return;
+        // ✅ Get JWT Token from Cookie
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("authToken")) {
+                    token = cookie.getValue();
+                }
+            }
         }
 
-        // ✅ Extract token from Authorization header
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // If no token → Continue without authentication (some routes are public)
+        if (token != null) {
+            try {
+                // ✅ Extract Email from Token using JwtService
+                String email = jwtService.extractEmail(token);
 
-        String token = authHeader.substring(7);
-        String username = jwtUtil.extractUsername(token);
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-        // ✅ Validate and Authenticate token
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // ✅ Find user in DB
+                    User user = userRepository.findByEmail(email);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    if (user != null) {
+                        // ✅ Create manually authenticated session
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        user,
+                                        null,
+                                        List.of() // no roles needed
+                                );
 
-            if (jwtUtil.isTokenValid(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                }
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            } catch (Exception ignored) {
+                // Token invalid/expired → Do nothing (user stays unauthenticated)
             }
         }
 

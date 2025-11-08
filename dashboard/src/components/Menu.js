@@ -109,8 +109,11 @@ const Menu = () => {
               <li>Profile</li>
               <li>Settings</li>
               <li
-                onClick={() => {
-                  localStorage.removeItem("authToken");
+                onClick={async () => {
+                  await fetch("http://localhost:8080/api/user/logout", {
+                    method: "POST",
+                    credentials: "include",
+                  });
                   window.location.href = "http://localhost:8082/login";
                 }}
               >

@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 // import { holdings } from "../data/data";
 import axios from "axios";
 const Holdings = () => {
-  const[allHoldings,setAllHoldings]=useState([]);
-  useEffect(()=>{
-    axios.get("http://localhost:8080/api/holdings/allHoldings").then((res)=>{
-      setAllHoldings(res.data)
-    })
-  },[])
+  const [allHoldings, setAllHoldings] = useState([]);
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/holdings/allHoldings", {
+        withCredentials: true,
+      })
+      .then((res) => {
+        setAllHoldings(res.data);
+      });
+  }, []);
   return (
     <>
       <h3 className="title">Holdings ({allHoldings.length})</h3>
