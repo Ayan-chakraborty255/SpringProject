@@ -13,14 +13,14 @@ const LogIn = () => {
     try {
       const res = await axios.post(
         "http://localhost:8080/api/user/login",
-        { email, password },
+        { email:email.toLowerCase(), password },
         { withCredentials: true }
       );
 
       alert("✅ Login successful!");
 
       // Redirect without token in URL
-      window.location.href = "http://localhost:8081/";
+      window.location.replace("http://localhost:8081/");
     } catch (err) {
       alert(
         "❌ " + (err.response?.data?.message || "Invalid Email or Password")
