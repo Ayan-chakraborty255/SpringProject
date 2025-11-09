@@ -11,7 +11,7 @@ const VerifyOtp = ({ email, sessionId }) => {
       const res = await axios.post(
         "http://localhost:8080/api/user/verify",
         {
-          email,
+          email: email.toLowerCase(),
           sessionId,
           otp: Number(otp),
         },
@@ -21,6 +21,7 @@ const VerifyOtp = ({ email, sessionId }) => {
       alert("✅ " + res.data);
       window.location.href = "/login";
     } catch (err) {
+      console.log(err.response?.data);
       alert("❌ " + (err.response?.data || "Verification failed"));
     }
   };

@@ -14,4 +14,6 @@ public class Order {
     private Integer qty;
     private double price;
     private String mode;
+    private String email;
+    private String tradeType;
 }

@@ -1,9 +1,12 @@
 package com.example.demo.repository;
 
+import java.util.List;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import com.example.demo.model.Holding;
 
-public interface HoldingsRepository extends MongoRepository<Holding,String>{
 
+public interface HoldingsRepository extends MongoRepository<Holding,String>{
+    List<Holding> findByEmail(String email);
 }

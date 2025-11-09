@@ -16,6 +16,7 @@ public class Holding {
     private Double price;
     private String net;
     private String day;
+    private String email;
 	
 	
 }

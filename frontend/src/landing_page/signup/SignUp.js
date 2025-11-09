@@ -15,7 +15,7 @@ const Signup = () => {
     try {
       const res = await axios.post(
         "http://localhost:8080/api/user/signup",
-        { email, username, password },
+        { email:email.toLowerCase(), username, password },
         { headers: { "Content-Type": "application/json" } }
       );
 
@@ -51,7 +51,7 @@ const Signup = () => {
               className="form-control form-control-lg"
               placeholder="Enter your Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
               required
               style={{ borderRadius: "12px" }}
             />

@@ -17,7 +17,8 @@ public class Position {
     private double price;
     private String net;
     private String day;
-    
+    private String email;
+
     private boolean isLoss;
     public boolean getIsLoss() {
         return isLoss;

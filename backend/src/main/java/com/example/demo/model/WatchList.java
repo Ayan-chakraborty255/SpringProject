@@ -14,6 +14,7 @@ public class WatchList {
     private double price;
     private String percent;
     private boolean isDown;
+    private String email;
 }
 // name: "WIPRO",
 //     price: 577.75,
