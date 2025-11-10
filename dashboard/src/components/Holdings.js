@@ -3,15 +3,21 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
+  const [data, setData] = useState(null);
   useEffect(() => {
     axios
       .get("http://localhost:8080/api/holdings/allHoldings", {
         withCredentials: true,
       })
       .then((res) => {
-        setAllHoldings(res.data);
+        setData(res.data);
+        setAllHoldings(res.data.holdings);
       });
   }, []);
+  if (!data)
+    return (
+      <h4 style={{ textAlign: "center", marginTop: "50px" }}>Loading...</h4>
+    );
   return (
     <>
       <h3 className="title">Holdings ({allHoldings.length})</h3>
@@ -33,9 +39,10 @@ const Holdings = () => {
           <tbody>
             {allHoldings.map((stock, index) => {
               const currval = stock.price * stock.qty;
-              const isProfit = currval - stock.avg * stock.qty >= 0.0;
+              const profit = currval - stock.avg * stock.qty;
+              const isProfit = profit >= 0;
               const profitClass = isProfit ? "profit" : "loss";
-              const dayClass = stock.isLoss ? "loss" : "profit";
+
               return (
                 <tr key={index}>
                   <td>{stock.name}</td>
@@ -43,11 +50,11 @@ const Holdings = () => {
                   <td>{stock.avg.toFixed(2)}</td>
                   <td>{stock.price.toFixed(2)}</td>
                   <td>{currval.toFixed(2)}</td>
-                  <td className={profitClass}>
-                    {(currval - stock.avg * stock.qty).toFixed(2)}
-                  </td>
+                  <td className={profitClass}>{profit.toFixed(2)}</td>
                   <td className={profitClass}>{stock.net}</td>
-                  <td className={dayClass}>{stock.day}</td>
+                  <td className={stock.isLoss ? "loss" : "profit"}>
+                    {stock.day}
+                  </td>
                 </tr>
               );
             })}
@@ -55,22 +62,22 @@ const Holdings = () => {
         </table>
       </div>
 
-      <div className="row">
-        <div className="col">
-          <h5>
-            29,875.<span>55</span>{" "}
-          </h5>
-          <p>Total investment</p>
+      <div className="row totals-row">
+        <div className="col total-box">
+          <h4 className="value">₹ {data.totalInvestment.toFixed(2)}</h4>
+          <p className="label">Total investment</p>
         </div>
-        <div className="col">
-          <h5>
-            31,428.<span>95</span>{" "}
-          </h5>
-          <p>Current value</p>
+
+        <div className="col total-box">
+          <h4 className="value">₹ {data.currentValue.toFixed(2)}</h4>
+          <p className="label">Current value</p>
         </div>
-        <div className="col">
-          <h5>1,553.40 (+5.20%)</h5>
-          <p>P&L</p>
+
+        <div className="col total-box">
+          <h4 className={`value ${data.profit >= 0 ? "profit" : "loss"}`}>
+            ₹ {data.profit.toFixed(2)} ({data.profitPercentage.toFixed(2)}%)
+          </h4>
+          <p className="label">P&L</p>
         </div>
       </div>
     </>

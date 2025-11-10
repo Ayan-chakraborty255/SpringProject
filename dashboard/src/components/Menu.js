@@ -1,16 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 
 const Menu = () => {
   const [selectedMenu, setSelectedMenu] = useState(0);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [username, setUsername] = useState("...");
 
-  const handleMenuClick = (index) => {
-    setSelectedMenu(index);
-  };
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/user/me", { withCredentials: true })
+      .then((res) => {
+        // If backend returns only email instead of username
+        if (typeof res.data === "string") {
+          setUsername(res.data);
+        } else {
+          setUsername(res.data.username || res.data.email);
+        }
+      })
+      .catch(() => {
+        setUsername("Guest");
+      });
+  }, []);
 
-  const handleProfileClick = () => {
+  const handleMenuClick = (index) => setSelectedMenu(index);
+  const handleProfileClick = () =>
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
+
+  const logout = async () => {
+    await axios.post(
+      "http://localhost:8080/api/user/logout",
+      {},
+      { withCredentials: true }
+    );
+    window.location.href = "http://localhost:8081/login";
   };
 
   const menuClass = "menu";
@@ -18,14 +41,15 @@ const Menu = () => {
 
   return (
     <div className="menu-container">
-      <img src="logo.png" style={{ width: "50px" }} />
+      <img src="logo.png" style={{ width: "50px" }} alt="logo" />
+
       <div className="menus">
         <ul>
           <li>
             <Link
               to="/"
               onClick={() => handleMenuClick(0)}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
               <p className={selectedMenu === 0 ? activeMenuClass : menuClass}>
                 Dashboard
@@ -37,7 +61,7 @@ const Menu = () => {
             <Link
               to="/orders"
               onClick={() => handleMenuClick(1)}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
               <p className={selectedMenu === 1 ? activeMenuClass : menuClass}>
                 Orders
@@ -49,7 +73,7 @@ const Menu = () => {
             <Link
               to="/holdings"
               onClick={() => handleMenuClick(2)}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
               <p className={selectedMenu === 2 ? activeMenuClass : menuClass}>
                 Holdings
@@ -61,7 +85,7 @@ const Menu = () => {
             <Link
               to="/positions"
               onClick={() => handleMenuClick(3)}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
               <p className={selectedMenu === 3 ? activeMenuClass : menuClass}>
                 Positions
@@ -73,7 +97,7 @@ const Menu = () => {
             <Link
               to="/funds"
               onClick={() => handleMenuClick(4)}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
               <p className={selectedMenu === 4 ? activeMenuClass : menuClass}>
                 Funds
@@ -85,7 +109,7 @@ const Menu = () => {
             <Link
               to="/apps"
               onClick={() => handleMenuClick(6)}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
               <p className={selectedMenu === 6 ? activeMenuClass : menuClass}>
                 Apps
@@ -98,8 +122,10 @@ const Menu = () => {
 
         {/* Profile Section */}
         <div className="profile" onClick={handleProfileClick}>
-          <div className="avatar">ZU</div>
-          <p className="username">USERID</p>
+          <div className="avatar">
+            {(username || "Guest").slice(0, 2).toUpperCase()}
+          </div>
+          <p className="username">{username}</p>
         </div>
 
         {/* Dropdown */}
@@ -107,18 +133,8 @@ const Menu = () => {
           <div className="profile-dropdown">
             <ul>
               <li>Profile</li>
-              <li>Settings</li>
-              <li
-                onClick={async () => {
-                  await fetch("http://localhost:8080/api/user/logout", {
-                    method: "POST",
-                    credentials: "include",
-                  });
-                  window.location.href = "http://localhost:8082/login";
-                }}
-              >
-                Logout
-              </li>
+              <li>History</li>
+              <li onClick={logout}>Logout</li>
             </ul>
           </div>
         )}

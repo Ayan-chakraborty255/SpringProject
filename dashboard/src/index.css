@@ -874,4 +874,35 @@ hr {
 .profile-dropdown li:hover {
   background: #f5f5f5;
 }
+.totals-row {
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.total-box {
+  flex: 1;
+}
+
+.value {
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.label {
+  margin-top: -5px;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* Profit & Loss Colors (Web Finance Standard) */
+.profit {
+  color: #0f9d58; /* Green */
+}
+
+.loss {
+  color: #d93025; /* Red */
+}
 

@@ -18,7 +18,7 @@ const BuyActionWindow = ({ uid }) => {
       qty: stockQuantity,
       price: stockPrice,
       mode: "BUY",
-    });
+    },{withCredentials:true});
 
     closeBuyWindow();
   };

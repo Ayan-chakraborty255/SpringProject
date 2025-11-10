@@ -1,10 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Summary = () => {
+  const [username, setUsername] = useState("...");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8080/api/user/me", { withCredentials: true })
+      .then((res) => {
+        if (typeof res.data === "string") {
+          setUsername(res.data);
+        } else {
+          setUsername(res.data.username || res.data.email);
+        }
+      })
+      .catch(() => {
+        setUsername("Guest");
+      });
+  }, []);
   return (
     <>
       <div className="username">
-        <h6>Hi, User!</h6>
+        <h6>Hi, {username}!</h6>
         <hr className="divider" />
       </div>
 
